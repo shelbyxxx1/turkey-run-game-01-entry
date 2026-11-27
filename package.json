@@ -1,0 +1,14 @@
+{
+  "name": "gobble-run-great-thanksgiving-escape",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "An original, offline Canvas 2D Thanksgiving escape runner.",
+  "license": "MIT",
+  "scripts": {
+    "start": "node serve.ts",
+    "test": "node tests/run-tests.mjs",
+    "test:browser": "node tests/browser-check.mjs",
+    "package": "MAKEFUN_OUTPUT_DIR=out node main.ts"
+  }
+}

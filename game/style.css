@@ -1,0 +1,8 @@
+:root { color-scheme: dark; background: #152a23; }
+* { box-sizing: border-box; }
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+body { display: grid; place-items: center; background: #152a23; touch-action: none; }
+main { width: 100%; height: 100%; display: grid; place-items: center; }
+canvas { display: block; width: min(100vw, 160vh); height: min(100vh, 62.5vw); outline: none; touch-action: none; }
+canvas:focus-visible { outline: 2px solid #f8c770; outline-offset: -3px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
