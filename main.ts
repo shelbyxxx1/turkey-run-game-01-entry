@@ -1,27 +1,42 @@
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { buildDossier } from './vendor/makefun-game.ts';
+// Gobble Run delivers Tom's autumn escape as a self-contained game and four chase portraits.
+// This entrypoint stages those assets, seals their canonical dossier, and checks the written receipt.
+import * as disk from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath as moduleFilename } from "node:url";
+import { buildDossier as describeGobbleRun } from "./vendor/makefun-game.ts";
 
-const here = fileURLToPath(new URL('.', import.meta.url));
-const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+const entryDirectory = dirname(moduleFilename(import.meta.url));
+const deliveryDirectory = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
+const receiptPath = resolve(deliveryDirectory, "dossier.json");
 
-mkdirSync(out, { recursive: true });
-cpSync(join(here, 'game'), join(out, 'game'), { recursive: true });
-mkdirSync(join(out, 'screenshots'), { recursive: true });
-if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
+// These limits are the submission contract, expressed independently of the staging process.
+const submissionLimits = {
+  "screenshots": { max_bytes: 256 * 1024, max: 4 },
+  "game_path_max_bytes": 1_000,
+  "game_max_files": 993,
+  "game_max_bytes": 48 * 1024 * 1024,
+  "text_max_bytes": 160 * 1024,
+};
 
-// The scorer's own caps (reference/gate.json): only text_max_bytes shapes the bytes; the others refuse an entry the
-// scorer would refuse (more than 4 screenshots or one over 256 KiB; more than 993 files in game/ or 48 MiB of game
-// files, in all, or a path under game/ over 1000 bytes: game/ counts beside /output's own 1000-entry cap, its
-// screenshots/ and dossier.json).
-writeFileSync(
-  join(out, 'dossier.json'),
-  buildDossier(out, {
-    text_max_bytes: 163840,
-    screenshots: { max: 4, max_bytes: 262144 },
-    game_max_files: 993,
-    game_max_bytes: 50331648,
-    game_path_max_bytes: 1000,
-  }),
-);
+disk.mkdirSync(deliveryDirectory, { recursive: true });
+for (const payloadName of ["game", "screenshots"]) {
+  const originalFolder = resolve(entryDirectory, payloadName);
+  const deliveredFolder = resolve(deliveryDirectory, payloadName);
+  const optionalGallery = payloadName === "screenshots";
+
+  // Keep the gallery directory even when no optional source gallery is present.
+  if (optionalGallery) disk.mkdirSync(deliveredFolder, { recursive: true });
+  if (!optionalGallery || disk.existsSync(originalFolder)) {
+    disk.cpSync(originalFolder, deliveredFolder, { recursive: true });
+  }
+}
+
+const receiptBytes = describeGobbleRun(deliveryDirectory, submissionLimits);
+disk.writeFileSync(receiptPath, receiptBytes);
+
+// statSync also fails immediately if the receipt was not created at its promised location.
+const writtenReceipt = disk.statSync(receiptPath);
+if (!writtenReceipt.isFile() || writtenReceipt.size !== receiptBytes.byteLength) {
+  throw new Error("Gobble Run's dossier was not written completely.");
+}
+console.log(`Gobble Run ready: ${writtenReceipt.size} dossier bytes written to ${receiptPath}`);
