@@ -1,0 +1,6 @@
+submission_id: 01a21b74-d27a-75c4-a3f3-4844336f062e
+title: Gobble Run
+competition: turkey-run-game-01
+commit: fede95d06a99ce432e65327ff6e8526920bd1132
+submitted_at_utc: 2026-11-27T05:22:50Z
+round: counts from round 1 of 4
